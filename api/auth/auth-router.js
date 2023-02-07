@@ -46,23 +46,23 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-  const { username, password } = req.body;
-  if (username && password) {
-      const user = await db('users').where('username', username).first();
-      if (!user) {
-        res.status(401).json({ message: "invalid credentials" });
-      } else if (user && bcrypt.compareSync(password, user.password)) {
-        const token = generateToken(user);
-        res.status(200).json({ message: `welcome, ${user.username}`, token });
-      } else {
-        res.status(401).json({ message: "invalid credentials" });
-      }
-  } else {
-    res.status(400).json({ message: "username and password required" });
+    const { username, password } = req.body;
+    if (username && password) {
+        const user = await db('users').where('username', username).first();
+        if (!user) {
+          res.status(401).json({ message: "invalid credentials" });
+        } else if (user && bcrypt.compareSync(password, user.password)) {
+          const token = generateToken(user);
+          res.status(200).json({ message: `welcome, ${user.username}`, token });
+        } else {
+          res.status(401).json({ message: "invalid credentials" });
+        }
+    } else {
+      res.status(400).json({ message: "username and password required" });
+    }
+  } catch (error) {
+    res.status(401).json({ message: "invalid credentials" });
   }
-} catch (error) {
-  res.status(401).json({ message: "invalid credentials" });
-}
 
   /*
     IMPLEMENT
@@ -90,7 +90,7 @@ router.post('/login', async (req, res) => {
 });
 
 function generateToken(user) {
-  const token = jwtToken.sign({ subject: user.id, username: user.username}, global.SECRET, { expiresIn: '1d' });
+  const token = jwtToken.sign({ subject: user.id, username: user.username}, "gghgh", { expiresIn: '1d' });
   return token;
 }
 

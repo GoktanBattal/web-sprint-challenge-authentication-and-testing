@@ -5,7 +5,7 @@ module.exports = (req, res, next) => {
     next({status: 401, message: 'token required'})
   }
 
-  jwt.verify(req.headers.authorization, global.SECRET, (error, token) => {
+  jwt.verify(req.headers.authorization, "gghgh", (error, token) => {
     if(error){
       next({status: 401, message: 'token invalid'})
     }
