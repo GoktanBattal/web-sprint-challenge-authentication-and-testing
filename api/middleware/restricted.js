@@ -1,5 +1,18 @@
+const jwt = require('jsonwebtoken');
+
 module.exports = (req, res, next) => {
-  next();
+  if(!req.headers.authorization) {
+    next({status: 401, message: 'token required'})
+  }
+
+  jwt.verify(req.headers.authorization, global.SECRET, (error, token) => {
+    if(error){
+      next({status: 401, message: 'token invalid'})
+    }
+    req.jwt = token;
+    next();
+  });
+
   /*
     IMPLEMENT
 

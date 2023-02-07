@@ -1,7 +1,22 @@
 const router = require('express').Router();
+const jwtToken = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+const db = require('../../data/dbConfig')
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+router.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    res.status(400).json({ message: 'username and password required' });
+  } else {
+    try {
+      const passwordHash = bcrypt.hashSync(password, global.HASHING_ROUND);
+      const newUserId = await db('users').insert({ username: username, password: passwordHash});
+      const result = await db('users').where({ id: newUserId }).first();
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(400).json({ message: 'username taken' });
+    }
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -29,8 +44,27 @@ router.post('/register', (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', async (req, res) => {
+  try {
+  const { username, password } = req.body;
+  if (username && password) {
+      const user = await db('users').where('username', username).first();
+      const validPass = await bcrypt.compareSync(password, user.password);
+      if (!user) {
+        res.status(401).json({ message: "invalid credentials" });
+      } else if (user && validPass) {
+        const token = await generateToken(user);
+        res.status(200).json({ message: `welcome, ${user.username}`, token: token });
+      } else {
+        res.status(401).json({ message: "invalid credentials" });
+      }
+  } else {
+    res.status(400).json({ message: "username and password required" });
+  }
+} catch (error) {
+  res.status(401).json({ message: "invalid credentials" });
+}
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -55,5 +89,10 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+async function generateToken(user) {
+  const token = await jwtToken.sign({ subject: user.id, username: user.username}, global.SECRET, { expiresIn: '1d' });
+  return token;
+}
 
 module.exports = router;
