@@ -49,12 +49,11 @@ router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (username && password) {
       const user = await db('users').where('username', username).first();
-      const validPass = await bcrypt.compareSync(password, user.password);
       if (!user) {
         res.status(401).json({ message: "invalid credentials" });
-      } else if (user && validPass) {
-        const token = await generateToken(user);
-        res.status(200).json({ message: `welcome, ${user.username}`, token: token });
+      } else if (user && bcrypt.compareSync(password, user.password)) {
+        const token = generateToken(user);
+        res.status(200).json({ message: `welcome, ${user.username}`, token });
       } else {
         res.status(401).json({ message: "invalid credentials" });
       }
@@ -90,8 +89,8 @@ router.post('/login', async (req, res) => {
   */
 });
 
-async function generateToken(user) {
-  const token = await jwtToken.sign({ subject: user.id, username: user.username}, global.SECRET, { expiresIn: '1d' });
+function generateToken(user) {
+  const token = jwtToken.sign({ subject: user.id, username: user.username}, global.SECRET, { expiresIn: '1d' });
   return token;
 }
 
